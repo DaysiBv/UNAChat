@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Socket.IO UNA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e5ddd5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px; /* Espacio alrededor del cuadro de chat */
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 80vh; /* Altura del contenedor de chat */
+            width: 100%; /* Ocupa el 100% del ancho */
+            max-width: 800px; /* Ampliado para un mayor ancho máximo */
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 15px; /* Mayor padding para más espacio */
+            overflow-y: auto;
+            list-style-type: none;
+            margin: 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .messages li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 80%;
+        }
+
+        .messages li:nth-child(odd) {
+            background-color: #dcf8c6; /* Color de fondo de mensajes enviados */
+            align-self: flex-end; /* Alinear a la derecha */
+        }
+
+        .messages li:nth-child(even) {
+            background-color: #fff; /* Color de fondo de mensajes recibidos */
+            align-self: flex-start; /* Alinear a la izquierda */
+        }
+
+        form {
+            display: flex;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ccc;
+        }
+
+        form input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            margin-right: 10px; /* Espacio entre el input y el botón */
+        }
+
+        button {
+            background-color: #25d366;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100px; /* Ancho fijo para el botón */
+            height: 50px; /* Aumentar la altura del botón */
+            font-size: 16px; /* Aumentar el tamaño de fuente */
+        }
+
+        button:hover {
+            background-color: #128c7e;
+        }
+
+        img, video {
+            max-width: 100%;
+        }
+
+        /* Media Queries para pantallas pequeñas */
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 95%; /* Ajuste adicional para móviles */
+            }
+
+            button {
+                padding: 10px 10px; /* Ajuste del tamaño del botón */
+                height: 40px; /* Altura más pequeña en móviles */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <ul id="messages" class="messages"></ul>
+        <form action="">
+            <input id="nombre" type="text" autocomplete="off" placeholder="Username" />
+            <input id="m" type="text" autocomplete="off" placeholder="Escriba un mensaje" />
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        var colorHexTxt = "";
+
+        // Función para generar colores aleatorios en hexadecimal
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Función para detectar si la URL es una imagen o video
+        function detectUrlType(url) {
+            const imagePattern = /\.(jpeg|jpg|gif|png|webp)$/i;
+            const videoPattern = /\.(mp4|webm|ogg)$/i;
+
+            if (imagePattern.test(url)) {
+                return 'image';
+            } else if (videoPattern.test(url)) {
+                return 'video';
+            }
+            return 'other';
+        }
+
+        // Función para mostrar imágenes y videos en el chat
+        function addMediaToChat(msgJson) {
+            const chatMessage = $('<li>');
+            const messageDisplay = "<b style='color:" + msgJson.color + "'>" + msgJson.nombre + "</b>: ";
+
+            // Detecta el tipo de contenido
+            const urlType = detectUrlType(msgJson.mensaje);
+            if (urlType === 'image') {
+                chatMessage.html(messageDisplay + "<br><img src='" + msgJson.mensaje + "' alt='Imagen'>");
+            } else if (urlType === 'video') {
+                chatMessage.html(messageDisplay + "<br><video controls><source src='" + msgJson.mensaje + "'></video>");
+            } else {
+                chatMessage.html(messageDisplay + msgJson.mensaje);
+            }
+
+            $('#messages').append(chatMessage);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        $(function () {
+            var socket = io();
+
+            // Emite evento al servidor
+            $('form').submit(function() {
+                var nombreTxt = $('#nombre').val() || "Anónimo";
+                var mensajeTxt = $('#m').val();
+
+                if (colorHexTxt == "") {
+                    colorHexTxt = getRandomColor();
+                }
+
+                var jsonMsg = { nombre: nombreTxt, mensaje: mensajeTxt, color: colorHexTxt };
+
+                if (nombreTxt.trim() != undefined && nombreTxt.trim() != "") {
+                    socket.emit('Evento-Mensaje-Server', JSON.stringify(jsonMsg));
+                    $('#m').val(''); // Limpiar el input
+                }
+
+                return false;
+            });
+
+            // Escucha al servidor para recibir mensajes
+            socket.on('Evento-Mensaje-Server', function(msg) {
+                var msgJson = JSON.parse(msg);
+                addMediaToChat(msgJson); // Mostrar el mensaje como texto o multimedia
+            });
+        });
+    </script>
+</body>
+</html>
