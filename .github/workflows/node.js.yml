@@ -65,7 +65,7 @@ jobs:
           password: RJpE4qSxMwGEe2_
 
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/infosec-chat:latest .
+        run: docker build -t daysibv05/infosec-chat:latest .
 
       - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/infosec-chat:latest
+        run: docker build -t daysibv05/infosec-chat:latest .
