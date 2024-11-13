@@ -83,4 +83,4 @@ jobs:
 
       - name: Deploy to Docker
         run: |
-          docker run -d ${{ secrets.DOCKER_USERNAME }}/your-docker-image-name:latest
+          docker build -t daysibv05/infosec-chat:latest .
