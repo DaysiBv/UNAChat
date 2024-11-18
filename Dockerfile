@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copia el resto del código de la aplicación
-COPY . .g
+COPY . .
 # Expone el puerto 3000
 EXPOSE 3000
 
