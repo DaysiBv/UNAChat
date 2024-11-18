@@ -1,12 +1,15 @@
 {
   "dependencies": {
     "express": "*",
-    "mocha": "^10.2.0",
     "socket.io": "*",
     "validator": "^13.12.0"
   },
   "scripts": {
     "start": "node server.js",
     "test": "mocha"
+  },
+  "devDependencies": {
+    "glob": "^11.0.0",
+    "mocha": "^10.8.2"
   }
 }

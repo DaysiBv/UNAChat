@@ -44,6 +44,11 @@ jobs:
         run: |
           docker build -t daysibv05/myapp:latest .
 
+      # Agregar la construcción de la imagen con el Dockerfile en el directorio .github/workflows
+      - name: Build Docker image with specific Dockerfile
+        run: |
+          docker build -t daysibv05/infosec-chat:latest -f .github/workflows/Dockerfile .
+
   # Job para escanear vulnerabilidades en la imagen Docker
   scan:
     runs-on: ubuntu-latest
@@ -58,8 +63,8 @@ jobs:
 
       - name: Run Trivy scan
         run: |
-          docker pull daysibv05/myapp:latest
-          trivy image --no-progress daysibv05/myapp:latest
+          docker pull daysibv05/infosec-chat:latest
+          trivy image --no-progress daysibv05/infosec-chat:latest
 
       - name: Upload Trivy scan results
         uses: actions/upload-artifact@v3
@@ -84,4 +89,4 @@ jobs:
 
       - name: Deploy to Docker
         run: |
-          docker run -d daysibv05/myapp:latest
+          docker run -d daysibv05/infosec-chat:latest
