@@ -25,8 +25,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
+      - name: Grant execution permissions for mocha
+        run: chmod +x ./node_modules/.bin/mocha
+
+      - name: Run tests with mocha
+        run: npx mocha  # Ejecutar las pruebas con npx mocha
 
   # Job para construir la imagen Docker
   build:
