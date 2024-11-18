@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   # Job de pruebas
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t daysibv05/myimage:latest .
+          docker build -t daysibv05/myapp:latest .
 
   # Job para escanear vulnerabilidades en la imagen Docker
   scan:
@@ -58,12 +58,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t daysibv05/myimage:latest .
+          docker build -t daysibv05/myapp:latest .
 
       - name: Run Trivy scan
         run: |
-          docker pull daysibv05/myimage:latest  # Asegúrate de usar el nombre de tu imagen
-          trivy image --no-progress daysibv05/myimage:latest
+          docker pull daysibv05/myapp:latest
+          trivy image --no-progress daysibv05/myapp:latest
 
       - name: Upload Trivy scan results
         uses: actions/upload-artifact@v3
@@ -82,4 +82,4 @@ jobs:
 
       - name: Deploy to Docker
         run: |
-          docker run -d daysibv05/myimage:latest  # Asegúrate de usar el nombre de tu imagen
+          docker run -d daysibv05/myapp:latest
