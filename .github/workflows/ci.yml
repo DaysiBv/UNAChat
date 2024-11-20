@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master   # Usamos la rama 'master' como principal
+      - master
   pull_request:
     branches:
-      - master   # También para pull requests hacia 'master'
+      - master
 
 jobs:
   # Job de pruebas
@@ -20,54 +20,32 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Ajustado a la versión Node.js que estás usando
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Grant execution permissions for mocha
-        run: chmod +x ./node_modules/.bin/mocha
-
       - name: Run tests with mocha
-        run: npx mocha  # Ejecutar las pruebas con npx mocha
+        run: npx mocha
 
-  # Job para construir la imagen Docker
-  build:
-    runs-on: ubuntu-latest
-    needs: test  # El job de construcción depende de que las pruebas hayan pasado
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: |
-          docker build -t daysibv05/myapp:latest .
-
-      # Agregar la construcción de la imagen con el Dockerfile en el directorio .github/workflows
-      - name: Build Docker image with specific Dockerfile
-        run: |
-          docker build -t daysibv05/infosec-chat:latest -f Dockerfile .
-
-  # Job para escanear vulnerabilidades en la imagen Docker
+  # Job para escanear vulnerabilidades
   scan:
     runs-on: ubuntu-latest
-    needs: build  # El job de escaneo depende de que la imagen haya sido construida
+    needs: test
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Pull Docker image by digest
+        run: docker pull daysibv05/infosec-chat@sha256:b9519148210ffe35594451947d1a85569de18ea597e7589c36b5c1b49b56b2f3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Install Trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.45.0_Linux-64bit.tar.gz
+          tar zxvf trivy_0.45.0_Linux-64bit.tar.gz
+          sudo mv trivy /usr/local/bin/
 
       - name: Run Trivy scan
         run: |
-          docker pull daysibv05/infosec-chat:latest
-          trivy image --no-progress daysibv05/infosec-chat:latest
+          trivy image --no-progress --format json -o trivy-report.json daysibv05/infosec-chat@sha256:b9519148210ffe35594451947d1a85569de18ea597e7589c36b5c1b49b56b2f3
 
       - name: Upload Trivy scan results
         uses: actions/upload-artifact@v3
@@ -78,18 +56,15 @@ jobs:
   # Job de despliegue
   deploy:
     runs-on: ubuntu-latest
-    needs: scan  # El job de despliegue depende de que el escaneo haya sido exitoso
+    needs: scan
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: daysibv05
           password: RJpE4qSxMwGEe2_
 
-      - name: Deploy to Docker
+      - name: Deploy Docker container
         run: |
-          docker run -d daysibv05/infosec-chat:latest
+          docker run -d --name infosec-chat-container -p 8080:8080 daysibv05/infosec-chat@sha256:b9519148210ffe35594451947d1a85569de18ea597e7589c36b5c1b49b56b2f3
