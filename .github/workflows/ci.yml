@@ -50,7 +50,7 @@ jobs:
       # Agregar la construcción de la imagen con el Dockerfile en el directorio .github/workflows
       - name: Build Docker image with specific Dockerfile
         run: |
-          docker build -t daysibv05/infosec-chat:latest -f .github/workflows/Dockerfile .
+          docker build -t daysibv05/infosec-chat:latest -f Dockerfile .
 
   # Job para escanear vulnerabilidades en la imagen Docker
   scan:
